@@ -5,18 +5,21 @@ const cookieParser = require("cookie-parser")
 
 // Route imports
 const authRoute = require("./routes/auth")
-
+const toDosRoutes = require("./routes/todos")
 const app = express()
+
 
 app.use(express.json())
 app.use(express.urlencoded())
 app.use(cookieParser())
 
-app.get("/api", (req, res) => {
-    res.send("Working with the get request")
-})
-
+// Routes
 app.use("/api/auth", authRoute)
+app.use("/api/todos", toDosRoutes)
+
+app.get("/api", (req, res) => {
+    res.send("Welcome to the backend of Todos App")
+})
 
 mongoose.connect(process.env.MONGO_URI).then(() => {
     console.log("Connected to the database");

@@ -43,6 +43,20 @@ router.post("/register", async (req, res) => {
         // Save the user to the DB
         const savedUser = await newUser.save()
 
+        // Set the cookie
+        const payload = { userId: savedUser._id }
+        // Note that the token can easily read the payload, BUT it's difficult to manipulate
+        // therefore, we can see if it is invalid or been tampered with (trying to pretend to be someone else)
+        const token = jwt.sign(payload, process.env.JWT_SECRET, {
+            expiresIn: "7d"
+        })
+
+        res.cookie("access-token", token, {
+            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production"
+        })
+
         // Create a user to return in JSON
         const userToReturn = { ...savedUser._doc }
         delete userToReturn.password
@@ -118,6 +132,20 @@ router.get("/current", requiresAuth, (req, res) => {
     }
 
     return res.json(req.user)
+})
+
+//  @route      PUT /api/auth/logout
+//  @desc       Log out user and clear cookie 
+//  @access     Private
+router.put("/logout", requiresAuth, async(req, res) => {
+    try {
+        res.clearCookie("access-token")
+
+        return res.json({success: true})
+    } catch (err) {
+        console.log(err)
+        return res.status(500).send(err.message)
+    }
 })
 
 module.exports = router;
